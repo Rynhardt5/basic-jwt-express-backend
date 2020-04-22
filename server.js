@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const cors = require('cors');
 const app = express();
 
 // Get environmental vars
@@ -13,6 +14,7 @@ require('./config/passport')(passport);
 
 // Middleware
 app.use(express.json());
+app.use(cors());
 app.use(passport.initialize());
 
 // Routes
