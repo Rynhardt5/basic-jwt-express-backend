@@ -22,6 +22,10 @@ router.get(
   }
 );
 
+router.get('/', (req, res) => {
+  res.send('Hello from app');
+});
+
 // @routes    POST /users/register
 // @desc      Create a new user and return JWT
 // @access    Public
