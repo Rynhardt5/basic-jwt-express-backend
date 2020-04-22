@@ -12,7 +12,7 @@ module.exports = (passport) => {
     new JwtStrategy(opts, async (jwt_payload, done) => {
       try {
         const filterValues = {
-          //   __v: false,
+          __v: false,
           password: false,
         };
 
