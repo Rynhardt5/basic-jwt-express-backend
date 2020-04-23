@@ -1,7 +1,6 @@
 const router = require('express').Router();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const passport = require('passport');
+const sgMail = require('../lib/sgMail');
 const { check, validationResult } = require('express-validator');
 const User = require('../models/User');
 
@@ -22,6 +21,24 @@ router.get(
   }
 );
 
+router.get('/email', (req, res) => {
+  const msg = {
+    to: 'rynhardt.smith@gmail.com',
+    from: 'rynhardt.smith@gmail.com',
+    templateId: 'd-0fd2dad0502645118d12619622404e29',
+  };
+
+  sgMail
+    .send(msg)
+    .then(() => {
+      res.status(200).send('Email sent');
+    })
+    .catch((error) => {
+      console.log(error.response.body);
+      // console.log(error.response.body.errors[0].message)
+    });
+});
+
 router.get('/', (req, res) => {
   res.send('Hello from app');
 });
@@ -33,7 +50,7 @@ router.post(
   '/register',
   [
     check('email').isEmail().withMessage('Please enter a valid email address'),
-    check('password').notEmpty().withMessage('Please enter your password'),
+    check('password').notEmpty().withMessage('Please enter a password'),
   ],
   async (req, res) => {
     // get values from post req check if valid
@@ -59,30 +76,16 @@ router.post(
         password,
       });
 
-      // gen salt
-      const salt = await bcrypt.genSalt(10);
-
-      // hash pw
-      user.password = await bcrypt.hash(password, salt);
       // save user
       await user.save();
 
       // Send JWT
-      jwt.sign(
-        {
-          id: user.id,
-        },
-        process.env.SECRET_KEY,
-        {
-          expiresIn: 3600,
-        },
-        (err, token) => {
-          res.status(200).json({
-            seccess: true,
-            token: 'Bearer ' + token,
-          });
-        }
-      );
+      const token = user.generateJWT();
+
+      res.status(200).json({
+        success: true,
+        token: 'Bearer ' + token,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -118,24 +121,16 @@ router.post(
       }
 
       // Check password
-      const passwordIsValid = await bcrypt.compare(password, user.password);
+      const passwordIsValid = user.comparePassword(password);
 
       if (passwordIsValid) {
-        jwt.sign(
-          {
-            id: user.id,
-          },
-          process.env.SECRET_KEY,
-          {
-            expiresIn: 3600,
-          },
-          (err, token) => {
-            return res.status(200).json({
-              seccess: true,
-              token: 'Bearer ' + token,
-            });
-          }
-        );
+        // Send JWT
+        const token = user.generateJWT();
+
+        res.status(200).json({
+          success: true,
+          token: 'Bearer ' + token,
+        });
       } else {
         return res.status(422).json({
           errors: [{ msg: 'Password is incorrect, please try again' }],

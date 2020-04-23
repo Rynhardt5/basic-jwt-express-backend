@@ -19,6 +19,7 @@ app.use(passport.initialize());
 
 // Routes
 app.use('/user', require('./routes/userRoutes'));
+app.use('/password', require('./routes/resetRoutes'));
 
 app.listen(
   process.env.PORT,

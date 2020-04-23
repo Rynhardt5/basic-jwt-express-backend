@@ -14,6 +14,8 @@ module.exports = (passport) => {
         const filterValues = {
           __v: false,
           password: false,
+          createdAt: false,
+          updatedAt: false,
         };
 
         const user = await User.findById(jwt_payload.id, filterValues);
